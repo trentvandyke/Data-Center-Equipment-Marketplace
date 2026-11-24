@@ -78,17 +78,17 @@ export function listingWhere(filters: SearchFilters): Prisma.ListingWhereInput {
   const where: Prisma.ListingWhereInput = { status: "ACTIVE" };
   if (filters.q) {
     where.OR = [
-      { title: { contains: filters.q } },
-      { description: { contains: filters.q } },
-      { manufacturer: { contains: filters.q } },
-      { model: { contains: filters.q } },
-      { serialNumber: { contains: filters.q } },
-      { location: { contains: filters.q } },
-      { externalSeller: { contains: filters.q } },
-      { sourceCategory: { contains: filters.q } },
-      { voltageText: { contains: filters.q } },
-      { ratingText: { contains: filters.q } },
-      { notes: { contains: filters.q } },
+      { title: { contains: filters.q, mode: "insensitive" } },
+      { description: { contains: filters.q, mode: "insensitive" } },
+      { manufacturer: { contains: filters.q, mode: "insensitive" } },
+      { model: { contains: filters.q, mode: "insensitive" } },
+      { serialNumber: { contains: filters.q, mode: "insensitive" } },
+      { location: { contains: filters.q, mode: "insensitive" } },
+      { externalSeller: { contains: filters.q, mode: "insensitive" } },
+      { sourceCategory: { contains: filters.q, mode: "insensitive" } },
+      { voltageText: { contains: filters.q, mode: "insensitive" } },
+      { ratingText: { contains: filters.q, mode: "insensitive" } },
+      { notes: { contains: filters.q, mode: "insensitive" } },
     ];
   }
   if (filters.fresh === "week") {
@@ -99,7 +99,7 @@ export function listingWhere(filters: SearchFilters): Prisma.ListingWhereInput {
   if (filters.condition) where.condition = filters.condition;
   if (filters.voltageClass) where.voltageClass = filters.voltageClass;
   if (filters.leadTime) where.leadTime = filters.leadTime;
-  if (filters.location) where.location = { contains: filters.location };
+  if (filters.location) where.location = { contains: filters.location, mode: "insensitive" };
   if (filters.ratingUnit) where.ratingUnit = filters.ratingUnit;
   if (filters.ratingMin != null || filters.ratingMax != null) {
     where.ratingValue = {

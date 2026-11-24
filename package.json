@@ -13,7 +13,8 @@
     "db:reset": "prisma db push --force-reset && prisma db seed && tsx scripts/import-inventory.ts data/inventory/recs_2026-11-24.json",
     "import:inventory": "tsx scripts/import-inventory.ts",
     "crawl": "tsx scripts/crawl.ts",
-    "test": "tsx --test src/lib/match/score.test.ts src/lib/crawl/robots.test.ts"
+    "test": "tsx --test src/lib/match/score.test.ts src/lib/crawl/robots.test.ts",
+    "vercel-build": "node scripts/vercel-build.mjs"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

@@ -10,7 +10,7 @@ Payments and freight are intentionally off. Buyers send an inquiry; commercial t
 
 - [Next.js 16](https://nextjs.org/) App Router, React 19, TypeScript
 - Tailwind CSS 4
-- Prisma 6 with SQLite for local development (schema is portable to Postgres)
+- Prisma 6 with Postgres (the schema provider is `postgresql`; point `DATABASE_URL` at a local or hosted Postgres)
 - Session auth: hashed passwords (`bcryptjs`) and an httpOnly JWT cookie (`jose`)
 - Server Actions for signup, listings, inquiries, and moderation
 
@@ -91,6 +91,8 @@ SQLite and the local `public/uploads` folder will not persist on Vercel. Before 
 5. Run `npx prisma db push` (or add migrations) against Postgres.
 6. Do not seed the demo passwords into production. If you do, change them immediately and suspend the demo users from `/admin`.
 7. Connect the Git repository in Vercel, or run `npx vercel`.
+
+On Vercel, the `vercel-build` script (`scripts/vercel-build.mjs`) runs `prisma db push` and, only when the database is empty, seeds the demo users and imports `data/inventory/recs_2026-11-24.json` before `next build`. It uses `DATABASE_URL_UNPOOLED` (Neon's direct connection) when set.
 
 `next build` runs `prisma generate`. The app does not process card payments or book freight in this version.
 
