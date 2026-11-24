@@ -2,7 +2,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { ConditionBadge, SampleBadge, SourcedBadge, StatusBadge } from "@/components/badges";
-import { SpecPlate } from "@/components/spec-plate";
 import { InquiryForm } from "@/components/forms/inquiry-form";
 import { PhotoGallery } from "@/components/photo-gallery";
 import { canManageListing, getCurrentUser } from "@/lib/auth";
@@ -84,20 +83,11 @@ async function ListingScreen({ params }: { params: Promise<{ slug: string }> }) 
 
       <div className="mt-6 grid items-start gap-8 lg:grid-cols-[minmax(0,1.4fr)_minmax(18rem,0.8fr)]">
         <div>
-          {listing.photos.length > 0 ? (
-            <PhotoGallery
-              title={listing.title}
-              photos={listing.photos.map((photo) => ({ src: photo.url, alt: photo.alt || listing.title }))}
-            />
-          ) : (
-            <div className="aspect-[4/3] overflow-hidden rounded-xl border border-line">
-              <SpecPlate
-                category={listing.sourceCategory || labelOf(categories, listing.category)}
-                rating={listing.ratingText || formatRating(listing.ratingValue, listing.ratingUnit)}
-                voltage={listing.voltageText || labelOf(voltageClasses, listing.voltageClass)}
-              />
-            </div>
-          )}
+          <PhotoGallery
+            title={listing.title}
+            category={listing.category}
+            photos={listing.photos.map((photo) => ({ src: photo.url, alt: photo.alt || listing.title }))}
+          />
           <header className="mt-6">
             <div className="flex flex-wrap items-center gap-2">
               <ConditionBadge condition={listing.condition} />

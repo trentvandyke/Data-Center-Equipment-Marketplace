@@ -134,6 +134,15 @@ npm run import:inventory -- path/to/newer-snapshot.xlsx
 
 The same import is on `/admin` (sign in as the admin account). A file is treated as a full snapshot of every source site it contains. Listings from those sites whose URL is absent are marked stale and drop out of public search. Running the import twice does not duplicate rows.
 
+The 2026-11-24 snapshot has no image columns, so those listings start on a category drawing. Fill real photos from the public listing pages:
+
+```bash
+npm run backfill:images -- --per-source 3 --from-snapshot
+npm run backfill:images -- --write
+```
+
+`--write` updates the database in `DATABASE_URL` (use the Neon direct URL for a large run). Results are cached under `.cache/image-backfill`, the crawl waits between requests, and it skips paths disallowed by `robots.txt`. A full pass is a one-off command, not part of every Vercel build, because fetching every listing page does not fit a short deploy. Set `BACKFILL_IMAGES=1` only if you add that command to your own deploy hook. Seller photo uploads use local `public/uploads` in development and Vercel Blob when `BLOB_READ_WRITE_TOKEN` is set.
+
 Sourced listings show **Sourced from {dealer}**, **View original listing**, and **Ask us to source this**. Those requests are stored for the admin desk, not sent to the outside dealer automatically.
 
 Demo seller accounts remain so someone can still post a listing. The old fictional sample equipment is no longer seeded.
@@ -177,6 +186,7 @@ The homepage tool accepts a PDF, an image, or pasted text. With an API key it ca
 | `CRAWL_MARK_ABSENT` | Set to `1` to let a finished crawl mark missing URLs stale. |
 | `DATABASE_URL` | Postgres connection string (pooled on Neon). |
 | `DATABASE_URL_UNPOOLED` | Optional direct Postgres URL. `vercel-build` uses it for schema push and import. |
+| `BLOB_READ_WRITE_TOKEN` | When set, seller photo and PDF uploads go to Vercel Blob. Omit it locally to use disk. |
 | `AUTH_SECRET` | Session cookie secret. |
 
 Match scores live in `src/lib/match/score.ts`. `npm test` checks them against the real snapshot.

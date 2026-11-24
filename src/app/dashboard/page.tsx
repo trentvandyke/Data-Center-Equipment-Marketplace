@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import { becomeSeller } from "@/actions/auth";
@@ -6,6 +5,7 @@ import { deleteListing, setListingStatus } from "@/actions/listings";
 import { ConfirmSubmit } from "@/components/confirm-submit";
 import { InquiryList } from "@/components/inquiry-list";
 import { StatusBadge } from "@/components/badges";
+import { ListingImage } from "@/components/listing-image";
 import { requireUser } from "@/lib/auth";
 import { formatMoney } from "@/lib/format";
 import { prisma } from "@/lib/db";
@@ -85,17 +85,12 @@ async function Dashboard() {
             <ul className="mt-4 grid gap-3">
               {listings.map((listing) => (
                 <li key={listing.id} className="panel flex flex-col gap-4 p-3 sm:flex-row sm:items-center">
-                  <div className="h-20 w-full overflow-hidden rounded-lg bg-paper sm:w-28">
-                    {listing.photos[0] ? (
-                      <Image
-                        src={listing.photos[0].url}
-                        alt=""
-                        width={160}
-                        height={120}
-                        unoptimized
-                        className="h-full w-full object-cover"
-                      />
-                    ) : null}
+                  <div className="h-20 w-full overflow-hidden rounded-lg bg-ink sm:w-28">
+                    <ListingImage
+                      src={listing.photos[0]?.url}
+                      alt=""
+                      category={listing.category}
+                    />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">

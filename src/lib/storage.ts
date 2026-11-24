@@ -16,15 +16,36 @@ export type FileStorage = {
 
 const uploadRoot = path.join(process.cwd(), "public", "uploads");
 
+const contentTypeFor: Record<string, string> = {
+  jpg: "image/jpeg",
+  png: "image/png",
+  webp: "image/webp",
+  pdf: "application/pdf",
+};
+
 export const storage: FileStorage = {
   async save(folder, bytes, extension) {
     const name = `${crypto.randomUUID()}.${extension}`;
+    if (process.env.BLOB_READ_WRITE_TOKEN) {
+      const { put } = await import("@vercel/blob");
+      const blob = await put(`${folder}/${name}`, bytes, {
+        access: "public",
+        token: process.env.BLOB_READ_WRITE_TOKEN,
+        contentType: contentTypeFor[extension] ?? "application/octet-stream",
+      });
+      return { url: blob.url };
+    }
     const dir = path.join(uploadRoot, folder);
     await mkdir(dir, { recursive: true });
     await writeFile(path.join(dir, name), bytes);
     return { url: `/uploads/${folder}/${name}` };
   },
   async remove(url) {
+    if (process.env.BLOB_READ_WRITE_TOKEN && url.includes(".blob.vercel-storage.com")) {
+      const { del } = await import("@vercel/blob");
+      await del(url, { token: process.env.BLOB_READ_WRITE_TOKEN }).catch(() => undefined);
+      return;
+    }
     if (!url.startsWith("/uploads/")) return;
     const relative = url.slice("/uploads/".length);
     if (!relative || relative.includes("..") || path.isAbsolute(relative)) return;

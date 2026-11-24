@@ -25,6 +25,7 @@ export type InventoryRecord = {
   dateChecked: string;
   notes: string;
   imageUrl?: string;
+  imageUrls?: string[];
 };
 
 export type ImportReport = {

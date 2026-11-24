@@ -1,4 +1,5 @@
 import { recordFromProduct } from "@/lib/crawl/classify";
+import { collectImageUrls } from "@/lib/images/extract";
 import { allowed, crawlPageLimit, fetchText } from "@/lib/crawl/http";
 import type { InventoryRecord } from "@/lib/inventory/types";
 
@@ -43,7 +44,7 @@ function productsFromHtml(html: string, platform: string, seller: string, seller
           description: String(product.description ?? ""),
           priceUsd: Number.isFinite(price) && price > 0 ? price : null,
           categoryHint: typeof product.category === "string" ? product.category : "",
-          imageUrl: typeof product.image === "string" ? product.image : undefined,
+          imageUrls: collectImageUrls([product.image], String(product.url ?? "")),
         });
         if (record) records.push(record);
       }
@@ -84,7 +85,11 @@ async function crawlWoo(input: {
         const categories = Array.isArray(product.categories)
           ? product.categories.map((item) => String(asRecord(item)?.name ?? "")).join(" ")
           : "";
-        const images = Array.isArray(product.images) ? asRecord(product.images[0]) : null;
+        const imageUrls = Array.isArray(product.images)
+          ? product.images
+              .map((item) => (typeof asRecord(item)?.src === "string" ? String(asRecord(item)?.src) : ""))
+              .filter(Boolean)
+          : [];
         const record = recordFromProduct({
           title: String(product.name ?? ""),
           url: String(product.permalink ?? ""),
@@ -93,7 +98,7 @@ async function crawlWoo(input: {
           sellerType: input.sellerType,
           description: `${categories} ${String(product.short_description ?? "")}`,
           priceUsd,
-          imageUrl: typeof images?.src === "string" ? images.src : undefined,
+          imageUrls,
         });
         if (record) records.push(record);
       }

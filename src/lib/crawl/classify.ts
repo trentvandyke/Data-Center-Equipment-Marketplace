@@ -32,6 +32,7 @@ export function recordFromProduct(input: {
   priceUsd?: number | null;
   priceText?: string;
   imageUrl?: string;
+  imageUrls?: string[];
   categoryHint?: string;
 }): InventoryRecord | null {
   const title = input.title.trim();
@@ -68,7 +69,8 @@ export function recordFromProduct(input: {
     url: input.url,
     dateChecked: new Date().toISOString().slice(0, 10),
     notes: (input.description ?? "").slice(0, 2000),
-    imageUrl: input.imageUrl,
+    imageUrl: input.imageUrls?.[0] ?? input.imageUrl,
+    imageUrls: input.imageUrls ?? (input.imageUrl ? [input.imageUrl] : undefined),
   };
 }
 

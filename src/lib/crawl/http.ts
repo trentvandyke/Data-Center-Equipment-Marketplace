@@ -11,11 +11,12 @@ export function crawlPageLimit() {
   return configured <= 0 ? Number.POSITIVE_INFINITY : configured;
 }
 
-export async function politeFetch(url: string, delayMs = crawlDelayMs()) {
+export async function politeFetch(url: string, delayMs = crawlDelayMs(), timeoutMs = 20000) {
   await new Promise((resolve) => setTimeout(resolve, delayMs));
   const response = await fetch(url, {
     headers: { "User-Agent": USER_AGENT, Accept: "text/html,application/json,application/xml;q=0.9,*/*;q=0.8" },
     redirect: "follow",
+    signal: AbortSignal.timeout(timeoutMs),
   });
   return response;
 }

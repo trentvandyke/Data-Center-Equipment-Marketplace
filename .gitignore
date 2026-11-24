@@ -36,6 +36,9 @@ yarn-error.log*
 .env.*.local
 !.env.example
 
+# image backfill cache
+/.cache/
+
 # local database and seller uploads
 /prisma/*.db
 /prisma/*.db-journal

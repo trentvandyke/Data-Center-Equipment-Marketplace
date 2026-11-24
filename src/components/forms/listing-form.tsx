@@ -3,6 +3,7 @@
 import { useActionState, useState, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 import { saveListing } from "@/actions/listings";
+import { ListingImage } from "@/components/listing-image";
 import {
   categories,
   conditions,
@@ -225,8 +226,7 @@ export function ListingForm({ listing }: { listing?: ListingFormValues }) {
           <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {listing.photos.map((photo) => (
               <li key={photo.id} className="overflow-hidden rounded-lg border border-line">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={photo.url} alt={photo.alt} className="aspect-[4/3] w-full object-cover" />
+                <ListingImage src={photo.url} alt={photo.alt} category={listing.category} className="aspect-[4/3] w-full object-cover" />
                 <label className="flex items-center gap-2 px-2 py-2 text-xs">
                   <input type="checkbox" name="removePhoto" value={photo.id} />
                   Remove
@@ -252,8 +252,9 @@ export function ListingForm({ listing }: { listing?: ListingFormValues }) {
         {previews.length > 0 ? (
           <div className="flex gap-2 overflow-x-auto">
             {previews.map((src) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img key={src} src={src} alt="" className="h-20 w-28 rounded-md object-cover" />
+              <span key={src} className="block h-20 w-28 overflow-hidden rounded-md">
+                <ListingImage src={src} alt="" category={listing?.category ?? "related"} />
+              </span>
             ))}
           </div>
         ) : null}

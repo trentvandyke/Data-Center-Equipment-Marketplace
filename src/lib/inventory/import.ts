@@ -3,6 +3,12 @@ import { contentKey, toStoredListing } from "@/lib/inventory/normalize";
 import { dedupeRecords } from "@/lib/inventory/parse";
 import type { ImportReport, InventoryRecord } from "@/lib/inventory/types";
 
+function photoRows(record: InventoryRecord, title: string) {
+  const urls = [...(record.imageUrls ?? [])];
+  if (record.imageUrl && !urls.includes(record.imageUrl)) urls.unshift(record.imageUrl);
+  return urls.slice(0, 6).map((url, index) => ({ url, alt: title, sortOrder: index }));
+}
+
 type ExistingRow = {
   id: string;
   sourceUrl: string | null;
@@ -23,6 +29,7 @@ type ExistingRow = {
   kva: number | null;
   amps: number | null;
   externalSeller: string | null;
+  photoCount: number;
 };
 
 function chunk<T>(items: T[], size: number) {
@@ -80,9 +87,10 @@ export async function importInventory(
         kva: true,
         amps: true,
         externalSeller: true,
+        _count: { select: { photos: true } },
       },
     });
-    existing.push(...rows);
+    existing.push(...rows.map((row) => ({ ...row, photoCount: row._count.photos })));
   }
   const byUrl = new Map(existing.map((row) => [row.sourceUrl, row]));
 
@@ -128,8 +136,8 @@ export async function importInventory(
           notes: fields.notes,
           firstSeen: fields.seenAt,
           lastSeen: fields.seenAt,
-          ...(record.imageUrl
-            ? { photos: { create: [{ url: record.imageUrl, alt: fields.title, sortOrder: 0 }] } }
+          ...(photoRows(record, fields.title).length
+            ? { photos: { create: photoRows(record, fields.title) } }
             : {}),
         },
       });
@@ -194,6 +202,12 @@ export async function importInventory(
         lastSeen: fields.seenAt,
       },
     });
+    const photos = photoRows(record, fields.title);
+    if (current.photoCount === 0 && photos.length > 0) {
+      await prisma.listingPhoto.createMany({
+        data: photos.map((photo) => ({ ...photo, listingId: current.id })),
+      });
+    }
   }
 
   if (options.markAbsent) {
