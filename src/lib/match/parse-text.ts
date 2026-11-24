@@ -26,8 +26,12 @@ function numberBefore(text: string, unit: RegExp) {
 }
 
 function detectManufacturer(text: string) {
-  const found = manufacturers.find((name) => text.toLowerCase().includes(name.toLowerCase()));
-  return found ?? null;
+  const ordered = [...manufacturers].sort((a, b) => b.length - a.length);
+  for (const name of ordered) {
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    if (new RegExp(`(?:^|[^A-Za-z0-9])${escaped}(?:[^A-Za-z0-9]|$)`, "i").test(text)) return name;
+  }
+  return null;
 }
 
 function configurationOf(text: string) {
@@ -52,7 +56,11 @@ export function needFromText(text: string): EquipmentNeed | null {
   const voltageMatch = cleaned.match(
     /([\d,.]+\s*kv(?![a-z])(?:\s*(?:to|\/|→)\s*[\d,.]+(?:\s*kv(?![a-z])|\s*v\b|\s*y\/\d+)?)?|\b\d{2,3}\s*y\/\d{2,3}\s*v?\b|\b277\s*\/\s*480\s*v?\b|\b(?:208|240|480|600)\s*v\b)/i,
   );
-  const quantity = numberBefore(cleaned, /(?:qty|quantity|x)\s*(\d{1,4})\b/i) ?? numberBefore(cleaned, /^(\d{1,3})\s*(?:x|units?)\b/i);
+  const quantity =
+    numberBefore(cleaned, /^(\d{1,4})\s*x\b/i) ??
+    numberBefore(cleaned, /(?:qty|quantity)\s*(\d{1,4})\b/i) ??
+    numberBefore(cleaned, /(?<!\d)x\s+(\d{1,4})\b/i) ??
+    numberBefore(cleaned, /^(\d{1,3})\s+units?\b/i);
   const phase = /single[-\s]?phase/i.test(cleaned) ? "1" : /3[-\s]?phase|three[-\s]?phase/i.test(cleaned) ? "3" : null;
   if (!category && !kva && !kw && !amps) return null;
   return {
@@ -73,10 +81,13 @@ export function needFromText(text: string): EquipmentNeed | null {
 /** Split a pasted description into line items without calling a model. */
 export function parseRequirementText(text: string): EquipmentNeed[] {
   const chunks = text
-    .split(/\n+|;\s+/)
+    .split(/\n+|;\s+|,\s+plus\s+|\s+plus\s+|\s+and\s+(?=\d+\s*x\b)/i)
     .map((chunk) => chunk.trim())
     .filter(Boolean);
-  const pieces = chunks.length > 1 ? chunks : text.split(/(?<=\.)\s+(?=[A-Z0-9])/);
+  const pieces = chunks.flatMap((chunk) => {
+    const sentences = chunk.split(/(?<=\.)\s+(?=[A-Z0-9])/);
+    return sentences.length > 1 ? sentences : [chunk];
+  });
   const needs = pieces.map(needFromText).filter((item): item is EquipmentNeed => item != null);
   if (needs.length > 0) return needs;
   const whole = needFromText(text);

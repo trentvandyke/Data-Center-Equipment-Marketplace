@@ -86,6 +86,24 @@ test("a 1500 kW generator request prefers a real generator near that rating", ()
   }
 });
 
+test("a combined transformer and generator sentence stays two lines", () => {
+  const needs = parseRequirementText(
+    "2x 2500 kVA pad-mount transformers 13.8kV to 480V, plus 1x 2000 kW diesel generator 480V",
+  );
+  assert.equal(needs.length, 2);
+  assert.equal(needs[0].category, "transformers");
+  assert.equal(needs[0].kva, 2500);
+  assert.equal(needs[0].quantity, 2);
+  assert.equal(needs[0].kw, null);
+  assert.equal(needs[0].manufacturer, null);
+  assert.match(needs[0].voltage, /13\.8\s*kv/i);
+  assert.equal(needs[1].category, "generators");
+  assert.equal(needs[1].kw, 2000);
+  assert.equal(needs[1].quantity, 1);
+  assert.equal(needs[1].manufacturer, null);
+  assert.match(needs[1].voltage, /480\s*v/i);
+});
+
 test("480 V switchgear lines up with a real 480 V breaker or switchgear listing", () => {
   const need = {
     label: "2000 A switchgear, 480Y/277 V",
