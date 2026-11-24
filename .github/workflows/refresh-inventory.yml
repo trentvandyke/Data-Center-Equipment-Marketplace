@@ -1,0 +1,27 @@
+name: Refresh inventory
+
+on:
+  schedule:
+    # 13:00 UTC daily. Vercel Cron hits the same hour.
+    - cron: "0 13 * * *"
+  workflow_dispatch:
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - name: Crawl public dealer catalogs into the database
+        run: npm run crawl
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          CRAWL_PAGE_LIMIT: "2000"
+          CRAWL_MIN_DELAY_MS: "1000"
+          CRAWL_MARK_ABSENT: "0"
