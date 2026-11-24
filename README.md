@@ -34,13 +34,25 @@ Payments and freight are intentionally off. Buyers send an inquiry; commercial t
 
 Requires Node.js 20 or newer.
 
+The app talks to Postgres. Start a database, then point `DATABASE_URL` at it.
+
+Docker:
+
+```bash
+docker run --name relayboard-postgres \
+  -e POSTGRES_USER=relayboard -e POSTGRES_PASSWORD=relayboard -e POSTGRES_DB=relayboard \
+  -p 5432:5432 -d postgres:16
+```
+
+That matches the URL in `.env.example`. To use Neon instead, put the pooled connection string in `DATABASE_URL`. If Neon gives you a direct (unpooled) URL as well, set `DATABASE_URL_UNPOOLED` to it. `scripts/vercel-build.mjs` uses the direct URL for `prisma db push` and the inventory import.
+
 ```bash
 npm install
 npm run setup
 npm run dev
 ```
 
-`npm run setup` copies `.env.example` to `.env` when needed, creates the SQLite database, and loads sample data. Open [http://localhost:3000](http://localhost:3000).
+`npm run setup` copies `.env.example` to `.env` when needed, pushes the schema, seeds demo accounts, and imports the 2026-11-24 inventory snapshot. Open [http://localhost:3000](http://localhost:3000).
 
 Reset the database (this deletes listings and accounts):
 
@@ -77,16 +89,16 @@ James at Ironclad Surplus already has sample inquiries on the Caterpillar genera
 
 | Variable | Purpose |
 | --- | --- |
-| `DATABASE_URL` | Prisma connection string. Local default is `file:./dev.db` (path is relative to `prisma/schema.prisma`). |
+| `DATABASE_URL` | Postgres connection string. Local Docker default is in `.env.example`. On Neon, use the pooled URL. |
 | `AUTH_SECRET` | Signs the session cookie. Use a long random value outside local demo. |
 
 ## Deploying to Vercel
 
-SQLite and the local `public/uploads` folder will not persist on Vercel. Before a public deploy:
+The database provider is already Postgres. Uploads in `public/uploads` do not persist on Vercel. Before a public deploy:
 
 1. Create a Postgres database (Neon, Supabase, or Vercel Postgres).
-2. In `prisma/schema.prisma`, set `provider = "postgresql"` and point `DATABASE_URL` at that database.
-3. Set `DATABASE_URL` and a new `AUTH_SECRET` in the Vercel project. Do not reuse the demo secret.
+2. Set `DATABASE_URL` to the pooled URL, and `DATABASE_URL_UNPOOLED` to Neon’s direct URL when you have one.
+3. Set a new `AUTH_SECRET` in the Vercel project. Do not reuse the demo secret.
 4. Replace the disk adapter in `src/lib/storage.ts` with Vercel Blob or S3. Keep the `save` / `remove` calls.
 5. Run `npx prisma db push` (or add migrations) against Postgres.
 6. Do not seed the demo passwords into production. If you do, change them immediately and suspend the demo users from `/admin`.
@@ -163,7 +175,8 @@ The homepage tool accepts a PDF, an image, or pasted text. With an API key it ca
 | `CRAWL_PAGE_LIMIT` | Max listing pages per adapter per run. `0` means no cap. Default `40`. |
 | `CRAWL_MIN_DELAY_MS` | Pause between fetches. Default `1000`. |
 | `CRAWL_MARK_ABSENT` | Set to `1` to let a finished crawl mark missing URLs stale. |
-| `DATABASE_URL` | SQLite locally, Postgres in production. |
+| `DATABASE_URL` | Postgres connection string (pooled on Neon). |
+| `DATABASE_URL_UNPOOLED` | Optional direct Postgres URL. `vercel-build` uses it for schema push and import. |
 | `AUTH_SECRET` | Session cookie secret. |
 
 Match scores live in `src/lib/match/score.ts`. `npm test` checks them against the real snapshot.
@@ -171,7 +184,7 @@ Match scores live in `src/lib/match/score.ts`. `npm test` checks them against th
 ## Suggested next steps
 
 - Lock the product name in `src/lib/config.ts`
-- Move hosting to Postgres and object storage
+- Move uploads to object storage (the database is already Postgres)
 - Email the seller when an inquiry arrives
 - Optional review queue so new listings stay hidden until an admin approves them
 - Implement `PaymentProvider` and `FreightProvider` when those workflows are in scope
