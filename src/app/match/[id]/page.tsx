@@ -6,6 +6,7 @@ import { categories, labelOf } from "@/lib/catalog";
 import { prisma } from "@/lib/db";
 import { formatOffer } from "@/lib/format";
 import { rankMatches } from "@/lib/match/score";
+import { toPublicListing } from "@/lib/public-copy";
 import type { EquipmentNeed, MatchCandidate } from "@/lib/match/types";
 
 export const instant = false;
@@ -30,6 +31,11 @@ async function Results({ params }: { params: Promise<{ id: string }> }) {
       id: true,
       slug: true,
       title: true,
+      publicTitle: true,
+      publicCode: true,
+      publicDescription: true,
+      publicLocation: true,
+      description: true,
       category: true,
       sourceCategory: true,
       manufacturer: true,
@@ -48,32 +54,35 @@ async function Results({ params }: { params: Promise<{ id: string }> }) {
       location: true,
       externalSeller: true,
       phase: true,
-      seller: { select: { company: true, name: true } },
     },
   });
-  const candidates: MatchCandidate[] = rows.map((row) => ({
-    id: row.id,
-    slug: row.slug,
-    title: row.title,
-    category: row.category,
-    sourceCategory: row.sourceCategory,
-    manufacturer: row.manufacturer,
-    voltageClass: row.voltageClass,
-    voltageText: row.voltageText,
-    ratingText: row.ratingText,
-    kw: row.kw,
-    kva: row.kva,
-    amps: row.amps,
-    ratingValue: row.ratingValue,
-    ratingUnit: row.ratingUnit,
-    quantity: row.quantity,
-    condition: row.condition,
-    priceCents: row.priceCents,
-    priceText: row.priceText,
-    location: row.location,
-    seller: row.externalSeller || row.seller?.company || row.seller?.name || "Seller",
-    phase: row.phase,
-  }));
+  const candidates: MatchCandidate[] = rows.map((row) => {
+    const view = toPublicListing(row);
+    return {
+      id: row.id,
+      slug: row.slug,
+      title: view.title,
+      category: row.category,
+      sourceCategory: view.typeLabel || null,
+      manufacturer: view.manufacturer || "Unspecified",
+      voltageClass: row.voltageClass,
+      voltageText: view.voltageText || null,
+      ratingText: view.ratingText || null,
+      kw: row.kw,
+      kva: row.kva,
+      amps: row.amps,
+      ratingValue: row.ratingValue,
+      ratingUnit: row.ratingUnit,
+      quantity: row.quantity,
+      condition: row.condition,
+      priceCents: row.priceCents,
+      priceText: view.priceText || null,
+      location: view.location,
+      seller: "",
+      phase: row.phase,
+      code: view.code,
+    };
+  });
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
@@ -103,7 +112,9 @@ async function Results({ params }: { params: Promise<{ id: string }> }) {
                           {hit.candidate.title}
                         </Link>
                         <p className="text-sm text-muted">
-                          {hit.candidate.seller} · {hit.candidate.location} · {formatOffer(hit.candidate.priceCents, hit.candidate.priceText)}
+                          {[hit.candidate.code, hit.candidate.location, formatOffer(hit.candidate.priceCents, hit.candidate.priceText)]
+                            .filter(Boolean)
+                            .join(" · ")}
                         </p>
                       </div>
                     </div>

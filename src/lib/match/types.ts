@@ -33,6 +33,7 @@ export type MatchCandidate = {
   priceText: string | null;
   location: string;
   seller: string;
+  code?: string;
   phase: string | null;
 };
 

@@ -20,14 +20,6 @@ export function ConditionBadge({ condition }: { condition: string }) {
   );
 }
 
-export function SourcedBadge({ seller }: { seller: string }) {
-  return (
-    <span className="rounded-full bg-paper/95 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink">
-      Sourced from {seller}
-    </span>
-  );
-}
-
 export function SampleBadge() {
   return (
     <span className="rounded-full border border-copper bg-paper px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-copper">

@@ -5,6 +5,7 @@ import { ListingCard } from "@/components/listing-card";
 import { categories } from "@/lib/catalog";
 import { prisma } from "@/lib/db";
 import { daysAgo } from "@/lib/format";
+import { toPublicListing } from "@/lib/public-copy";
 import { cardInclude } from "@/lib/queries";
 
 export async function HeroBoard() {
@@ -13,23 +14,34 @@ export async function HeroBoard() {
     where: { status: "ACTIVE" },
     orderBy: [{ firstSeen: "desc" }, { createdAt: "desc" }],
     take: 4,
-    select: { slug: true, title: true, manufacturer: true, location: true, priceCents: true, externalSeller: true },
+    select: {
+      slug: true,
+      title: true,
+      publicTitle: true,
+      publicCode: true,
+      manufacturer: true,
+      location: true,
+      publicLocation: true,
+      description: true,
+      externalSeller: true,
+    },
   });
   return (
     <aside className="panel p-5">
       <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-copper">On the board</p>
       <ul className="mt-4 divide-y divide-line">
-        {listings.map((listing) => (
-          <li key={listing.slug} className="py-3">
-            <Link href={`/listings/${listing.slug}`} className="block">
-              <p className="text-[11px] uppercase tracking-[0.14em] text-muted">
-                {listing.externalSeller || listing.manufacturer}
-              </p>
-              <p className="font-serif text-lg leading-snug">{listing.title}</p>
-              <p className="text-sm text-muted">{listing.location}</p>
-            </Link>
-          </li>
-        ))}
+        {listings.map((listing) => {
+          const view = toPublicListing({ ...listing, description: listing.description });
+          return (
+            <li key={listing.slug} className="py-3">
+              <Link href={`/listings/${listing.slug}`} className="block">
+                <p className="text-[11px] uppercase tracking-[0.14em] text-muted">{view.manufacturer || view.code || "Equipment"}</p>
+                <p className="font-serif text-lg leading-snug">{view.title}</p>
+                <p className="text-sm text-muted">{view.location}</p>
+              </Link>
+            </li>
+          );
+        })}
       </ul>
     </aside>
   );
@@ -38,7 +50,7 @@ export async function HeroBoard() {
 export async function HomeMarket() {
   await connection();
   const weekAgo = daysAgo(7);
-  const [fresh, freshCount, recent, grouped, listingCount, sellerCount] = await Promise.all([
+  const [fresh, freshCount, recent, grouped, listingCount, pricedCount] = await Promise.all([
     prisma.listing.findMany({
       where: { status: "ACTIVE", firstSeen: { gte: weekAgo } },
       include: cardInclude,
@@ -58,11 +70,7 @@ export async function HomeMarket() {
       _count: { _all: true },
     }),
     prisma.listing.count({ where: { status: "ACTIVE" } }),
-    prisma.listing.findMany({
-      where: { status: "ACTIVE", origin: "SOURCED" },
-      distinct: ["externalSeller"],
-      select: { externalSeller: true },
-    }),
+    prisma.listing.count({ where: { status: "ACTIVE", priceCents: { not: null } } }),
   ]);
   const counts = new Map(grouped.map((row) => [row.category, row._count._all]));
 
@@ -72,7 +80,7 @@ export async function HomeMarket() {
         <dl className="grid grid-cols-3 gap-3">
           <Stat label="Active listings" value={String(listingCount)} />
           <Stat label="Categories" value={String(counts.size)} />
-          <Stat label="Dealers" value={String(sellerCount.filter((row) => row.externalSeller).length)} />
+          <Stat label="Priced" value={String(pricedCount)} />
         </dl>
         <div className="mt-10 flex items-end justify-between gap-4">
           <div>
@@ -92,7 +100,7 @@ export async function HomeMarket() {
           <h2 className="font-serif text-3xl">Browse by category</h2>
         </div>
         <p className="mt-2 max-w-2xl text-sm text-muted">
-          Sourced listings are copied from public dealer sites and labeled with the dealer. Confirm price and availability on the original page.
+          Every listing is offered by Axiveris. Request a quote and we will confirm price and availability.
         </p>
         <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {categories.map((category) => (

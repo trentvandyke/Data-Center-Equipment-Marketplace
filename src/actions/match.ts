@@ -6,6 +6,7 @@ import { extractText } from "unpdf";
 import { z } from "zod";
 import { extractEquipment } from "@/lib/match/extract";
 import type { EquipmentNeed } from "@/lib/match/types";
+import { site } from "@/lib/config";
 import { prisma } from "@/lib/db";
 import type { ActionState } from "@/lib/types";
 
@@ -132,7 +133,7 @@ export async function requestMatch(_prev: ActionState, formData: FormData): Prom
     },
   });
   revalidatePath("/admin");
-  return { success: "Request sent. Axiveris can see it in the admin desk." };
+  return { success: `Quote request sent to ${site.ownerName}.` };
 }
 
 function blank(value: FormDataEntryValue | null) {

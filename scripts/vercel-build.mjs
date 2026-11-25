@@ -19,5 +19,6 @@ console.log(`Database has ${users} users and ${listings} listings.`);
 
 if (users === 0) run("npx prisma db seed", dbEnv);
 if (listings === 0) run("npx tsx scripts/import-inventory.ts data/inventory/recs_2026-11-24.json", dbEnv);
+run("npx tsx scripts/scrub-public.ts", dbEnv);
 
 run("npx next build");

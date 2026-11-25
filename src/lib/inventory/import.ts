@@ -2,11 +2,26 @@ import { prisma } from "@/lib/db";
 import { contentKey, toStoredListing } from "@/lib/inventory/normalize";
 import { dedupeRecords } from "@/lib/inventory/parse";
 import type { ImportReport, InventoryRecord } from "@/lib/inventory/types";
+import { publicCopy, sanitizePublicText, sellerAliases } from "@/lib/public-copy";
+import { copyRemoteImage } from "@/lib/storage";
 
-function photoRows(record: InventoryRecord, title: string) {
+async function photoRows(record: InventoryRecord, title: string) {
   const urls = [...(record.imageUrls ?? [])];
   if (record.imageUrl && !urls.includes(record.imageUrl)) urls.unshift(record.imageUrl);
-  return urls.slice(0, 6).map((url, index) => ({ url, alt: title, sortOrder: index }));
+  const alt = sanitizePublicText(title, sellerAliases(record.seller)).slice(0, 180);
+  const rows = [];
+  for (const [index, url] of urls.slice(0, 6).entries()) {
+    let stored = url;
+    if (process.env.BLOB_READ_WRITE_TOKEN && /^https?:/i.test(url) && !url.includes(".blob.vercel-storage.com")) {
+      try {
+        stored = (await copyRemoteImage(url)).url;
+      } catch {
+        stored = url;
+      }
+    }
+    rows.push({ url: stored, alt, sortOrder: index });
+  }
+  return rows;
 }
 
 type ExistingRow = {
@@ -98,6 +113,8 @@ export async function importInventory(
     const fields = toStoredListing(record);
     if (options.seenAt) fields.seenAt = options.seenAt;
     const current = byUrl.get(record.url);
+    const photos = await photoRows(record, fields.title);
+    const buyerCopy = publicCopy(fields);
     if (!current) {
       await prisma.listing.create({
         data: {
@@ -136,9 +153,8 @@ export async function importInventory(
           notes: fields.notes,
           firstSeen: fields.seenAt,
           lastSeen: fields.seenAt,
-          ...(photoRows(record, fields.title).length
-            ? { photos: { create: photoRows(record, fields.title) } }
-            : {}),
+          ...publicCopy(fields),
+          ...(photos.length ? { photos: { create: photos } } : {}),
         },
       });
       report.created += 1;
@@ -200,9 +216,9 @@ export async function importInventory(
         notes: fields.notes,
         status: "ACTIVE",
         lastSeen: fields.seenAt,
+        ...buyerCopy,
       },
     });
-    const photos = photoRows(record, fields.title);
     if (current.photoCount === 0 && photos.length > 0) {
       await prisma.listingPhoto.createMany({
         data: photos.map((photo) => ({ ...photo, listingId: current.id })),

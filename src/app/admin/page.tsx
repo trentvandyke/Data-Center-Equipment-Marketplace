@@ -20,7 +20,7 @@ export default function AdminPage() {
 
 async function Admin() {
   const admin = await requireAdmin();
-  const [listings, listingCount, users, leads, sourceInquiries] = await Promise.all([
+  const [listings, listingCount, users, leads, quoteInquiries] = await Promise.all([
     prisma.listing.findMany({
       orderBy: { updatedAt: "desc" },
       take: 80,
@@ -37,10 +37,9 @@ async function Admin() {
       include: { lines: { include: { listing: { select: { title: true, slug: true } } } } },
     }),
     prisma.inquiry.findMany({
-      where: { kind: "SOURCE" },
       orderBy: { createdAt: "desc" },
-      take: 30,
-      include: { listing: { select: { title: true, slug: true } } },
+      take: 40,
+      include: { listing: { select: { title: true, publicCode: true, sourceUrl: true, sourcePlatform: true, externalSeller: true } } },
     }),
   ]);
 
@@ -48,15 +47,15 @@ async function Admin() {
     <div className="mx-auto max-w-6xl px-4 py-8">
       <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-copper">Moderation</p>
       <h1 className="mt-2 font-serif text-4xl">Admin</h1>
-      <p className="mt-2 text-sm text-muted">Signed in as {admin.email}. Import a snapshot, review sourcing requests, or hide a listing.</p>
+      <p className="mt-2 text-sm text-muted">Signed in as {admin.email}. Import a snapshot, review quote requests, or hide a listing. Source names stay on this page.</p>
       <div className="mt-6">
         <AdminImport />
       </div>
 
       <section className="mt-8">
-        <h2 className="font-serif text-2xl">Sourcing requests</h2>
-        {leads.length === 0 && sourceInquiries.length === 0 ? (
-          <p className="mt-2 text-sm text-muted">No match requests or source inquiries yet.</p>
+        <h2 className="font-serif text-2xl">Quote requests</h2>
+        {leads.length === 0 && quoteInquiries.length === 0 ? (
+          <p className="mt-2 text-sm text-muted">No quote requests yet.</p>
         ) : null}
         <ul className="mt-3 grid gap-3">
           {leads.map((lead) => (
@@ -77,12 +76,21 @@ async function Admin() {
               </ul>
             </li>
           ))}
-          {sourceInquiries.map((inquiry) => (
+          {quoteInquiries.map((inquiry) => (
             <li key={inquiry.id} className="panel p-4 text-sm">
               <p className="font-medium">
-                Ask us to source · {inquiry.name} · {inquiry.email}
+                Quote · {inquiry.name} · {inquiry.email}
               </p>
-              <p>{inquiry.listing.title}</p>
+              <p>
+                {inquiry.listing.publicCode ? `${inquiry.listing.publicCode} · ` : ""}
+                {inquiry.listing.title}
+              </p>
+              {inquiry.listing.externalSeller ? (
+                <p className="text-xs text-muted">
+                  Internal source: {inquiry.listing.externalSeller}
+                  {inquiry.listing.sourcePlatform ? ` · ${inquiry.listing.sourcePlatform}` : ""}
+                </p>
+              ) : null}
               <p className="text-muted">{inquiry.message}</p>
             </li>
           ))}
@@ -110,7 +118,17 @@ async function Admin() {
                       <StatusBadge status={listing.status} />
                       {listing.isSample ? <span className="text-xs text-copper">Sample</span> : null}
                     </div>
-                    <p className="mt-1 font-medium">{listing.title}</p>
+                    <p className="mt-1 font-medium">
+                      {listing.publicCode ? `${listing.publicCode} · ` : ""}
+                      {listing.title}
+                    </p>
+                    {listing.sourceUrl ? (
+                      <p className="text-xs text-muted">
+                        <a href={listing.sourceUrl} className="text-pine">
+                          {listing.sourcePlatform || "Source page"}
+                        </a>
+                      </p>
+                    ) : null}
                   </td>
                   <td className="px-3 py-3 align-top">
                     <p>{listing.seller?.company || listing.seller?.name || listing.externalSeller || "Posted listing"}</p>

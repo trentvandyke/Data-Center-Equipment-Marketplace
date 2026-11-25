@@ -226,7 +226,7 @@ export function ListingForm({ listing }: { listing?: ListingFormValues }) {
           <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {listing.photos.map((photo) => (
               <li key={photo.id} className="overflow-hidden rounded-lg border border-line">
-                <ListingImage src={photo.url} alt={photo.alt} category={listing.category} className="aspect-[4/3] w-full object-cover" />
+                <ListingImage src={`/api/img/${photo.id}`} alt="" category={listing.category} className="aspect-[4/3] w-full object-cover" />
                 <label className="flex items-center gap-2 px-2 py-2 text-xs">
                   <input type="checkbox" name="removePhoto" value={photo.id} />
                   Remove

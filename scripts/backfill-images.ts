@@ -4,6 +4,7 @@ import path from "node:path";
 import { PrismaClient } from "@prisma/client";
 import { allowed, politeFetch } from "../src/lib/crawl/http";
 import { extractImageUrls } from "../src/lib/images/extract";
+import { copyRemoteImage } from "../src/lib/storage";
 
 type Target = { platform: string; url: string; listingId?: string };
 
@@ -112,12 +113,29 @@ async function main() {
   }
 
   if (write && !fromSnapshot) {
+    const mirror = Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+    if (!mirror) {
+      console.log("BLOB_READ_WRITE_TOKEN is not set. Remote URLs stay in the database. Public pages still request them through /api/img/:id. Run npm run images:to-blob after the token is set.");
+    }
     const prisma = new PrismaClient();
     for (const item of items) {
       const images = found.get(item.url);
       if (!item.listingId || !images?.length) continue;
+      const stored: string[] = [];
+      for (const url of images) {
+        if (!mirror) {
+          stored.push(url);
+          continue;
+        }
+        try {
+          stored.push((await copyRemoteImage(url)).url);
+        } catch (error) {
+          stored.push(url);
+          console.log(`mirror-failed\t${error instanceof Error ? error.message : "failed"}`);
+        }
+      }
       await prisma.listingPhoto.createMany({
-        data: images.map((url, index) => ({ listingId: item.listingId!, url, alt: "", sortOrder: index })),
+        data: stored.map((url, index) => ({ listingId: item.listingId!, url, alt: "", sortOrder: index })),
       });
     }
     await prisma.$disconnect();

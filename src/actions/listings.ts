@@ -6,6 +6,8 @@ import { canManageListing, requireSeller, requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { slugify } from "@/lib/format";
 import { parseListingInput } from "@/lib/listing-input";
+import { nextPublicCode } from "@/lib/public-code";
+import { publicCopy } from "@/lib/public-copy";
 import {
   MAX_DOCUMENTS,
   MAX_DOCUMENT_BYTES,
@@ -104,6 +106,12 @@ export async function saveListing(listingId: string, _prev: ActionState, formDat
       ? existing.status
       : (input.status ?? existing?.status ?? "ACTIVE");
 
+  const buyerCopy = publicCopy({
+    title: input.title,
+    description: input.description,
+    location: input.location,
+  });
+
   try {
     const saved = existing
       ? await prisma.listing.update({
@@ -111,6 +119,7 @@ export async function saveListing(listingId: string, _prev: ActionState, formDat
           data: {
             title: input.title,
             description: input.description,
+            ...buyerCopy,
             category: input.category,
             manufacturer: input.manufacturer,
             condition: input.condition,
@@ -127,11 +136,12 @@ export async function saveListing(listingId: string, _prev: ActionState, formDat
             serialNumber: input.serialNumber,
             leadTime: input.leadTime,
             status,
+            ...(existing && !existing.publicCode ? { publicCode: await nextPublicCode() } : {}),
             photos: {
               deleteMany: { id: { in: [...removePhotoIds] } },
               create: photos.saved.map((url, index) => ({
                 url,
-                alt: input.title,
+                alt: buyerCopy.publicTitle,
                 sortOrder: keptPhotos.length + index,
               })),
             },
@@ -151,6 +161,8 @@ export async function saveListing(listingId: string, _prev: ActionState, formDat
             title: input.title,
             slug: await uniqueSlug(input.title),
             description: input.description,
+            publicCode: await nextPublicCode(),
+            ...buyerCopy,
             category: input.category,
             manufacturer: input.manufacturer,
             condition: input.condition,
@@ -173,7 +185,7 @@ export async function saveListing(listingId: string, _prev: ActionState, formDat
             photos: {
               create: photos.saved.map((url, index) => ({
                 url,
-                alt: input.title,
+                alt: buyerCopy.publicTitle,
                 sortOrder: index,
               })),
             },

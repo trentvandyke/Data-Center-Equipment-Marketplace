@@ -8,11 +8,9 @@ import { fieldError, type ActionState } from "@/lib/types";
 export function InquiryForm({
   listingId,
   defaults,
-  intent = "seller",
 }: {
   listingId: string;
   defaults: { name: string; email: string; company: string; phone: string };
-  intent?: "seller" | "source";
 }) {
   const [state, action] = useActionState(sendInquiry, {} as ActionState);
   const formRef = useRef<HTMLFormElement>(null);
@@ -24,7 +22,6 @@ export function InquiryForm({
   return (
     <form ref={formRef} action={action} className="grid gap-3">
       <input type="hidden" name="listingId" value={listingId} />
-      {intent === "source" ? <input type="hidden" name="kind" value="SOURCE" /> : null}
       <input name="website" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
       {state.error ? <p className="text-sm text-danger">{state.error}</p> : null}
       {state.success ? <p className="rounded-lg bg-pine/10 px-3 py-2 text-sm text-pine">{state.success}</p> : null}
@@ -62,7 +59,7 @@ export function InquiryForm({
         />
         <Error message={fieldError(state, "message")} />
       </label>
-      <Submit intent={intent} />
+      <Submit />
     </form>
   );
 }
@@ -72,11 +69,11 @@ function Error({ message }: { message?: string }) {
   return <span className="mt-1 block text-sm text-danger">{message}</span>;
 }
 
-function Submit({ intent }: { intent: "seller" | "source" }) {
+function Submit() {
   const { pending } = useFormStatus();
   return (
     <button type="submit" className="btn btn-copper" disabled={pending}>
-      {pending ? "Sending…" : intent === "source" ? "Ask us to source this" : "Send inquiry"}
+      {pending ? "Sending…" : "Request a quote"}
     </button>
   );
 }

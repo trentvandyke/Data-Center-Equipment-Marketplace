@@ -171,7 +171,7 @@ export function toStoredListing(record: InventoryRecord): StoredListingFields {
     record.conditionRaw ? `Condition as listed: ${record.conditionRaw}.` : "",
     record.hours ? `Hours: ${record.hours}.` : "",
     record.rating ? `Rating: ${record.rating}.` : "",
-    "Availability and price were copied from a public dealer listing. Confirm both on the original page before you buy.",
+    "Ask us to confirm availability and price.",
   ]
     .filter(Boolean)
     .join(" ");

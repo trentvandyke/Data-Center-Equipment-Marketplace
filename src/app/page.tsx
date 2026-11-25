@@ -53,8 +53,8 @@ export default function HomePage() {
           />
           <Step
             n="02"
-            title="Send an inquiry"
-            body="The RFQ form stores the message for the seller. They read it in the dashboard and reply from their own email."
+            title="Request a quote"
+            body={`The quote form goes to ${site.ownerName} at ${site.legalName}. We reply from the desk.`}
           />
           <Step
             n="03"

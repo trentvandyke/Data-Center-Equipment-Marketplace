@@ -18,17 +18,17 @@ Payments and freight are intentionally off. Buyers send an inquiry; commercial t
 
 - Home page with category tiles, featured listings, and recent listings
 - Keyword search plus filters for category, manufacturer, condition, voltage class, rating, price, lead time, and location
-- Listing page with a photo gallery, spec table, documents, seller card, and an inquiry form
+- Listing page with a photo gallery, spec table, hosted documents, and a quote form that goes to the owner
 - Seller and buyer accounts (sign up, log in, log out)
 - Create, edit, and delete listings with multiple photos and PDF attachments
 - Mark a listing sold or available again
-- Seller dashboard for listings and incoming inquiries
+- Seller dashboard for listings the account posted. Quote requests are not delivered to seller accounts
 - Admin view to hide or feature listings and to suspend users
-- A sourced catalog of 2,388 real public dealer listings (snapshot dated 2026-11-24), labeled with the dealer and a link back to the original page
+- A resale catalog of 2,388 listings from the 2026-11-24 snapshot. Buyers see a neutral id (`RB-000123`) and scrubbed title. Source names, source URLs, and stock numbers stay on the admin desk
 - Idempotent JSON/Excel import (CLI and admin upload) keyed on the source URL, with first seen / last seen dates and stale marking
 - Daily crawl of the public dealer sites that allow it, plus a manual file drop for the rest
 - Homepage one-line matcher: upload a diagram or paste a requirement, edit the extracted lines, and rank inventory. Requests land in the admin desk
-- Seller accounts can still post their own listings, separate from sourced inventory
+- Seller accounts can still post their own listings. Buyer quotes for every listing go to the owner, Trent Van Dyke
 
 ## Setup
 
@@ -143,7 +143,21 @@ npm run backfill:images -- --write
 
 `--write` updates the database in `DATABASE_URL` (use the Neon direct URL for a large run). Results are cached under `.cache/image-backfill`, the crawl waits between requests, and it skips paths disallowed by `robots.txt`. A full pass is a one-off command, not part of every Vercel build, because fetching every listing page does not fit a short deploy. Set `BACKFILL_IMAGES=1` only if you add that command to your own deploy hook. Seller photo uploads use local `public/uploads` in development and Vercel Blob when `BLOB_READ_WRITE_TOKEN` is set.
 
-Sourced listings show **Sourced from {dealer}**, **View original listing**, and **Ask us to source this**. Those requests are stored for the admin desk, not sent to the outside dealer automatically.
+Buyers never see who originally listed a unit. Public pages, search, match results, page metadata, and the quote form use the scrubbed title, description, and location, plus a listing id such as `RB-000123`. Photos are requested as `/api/img/<id>`, so a source domain is not in the page. Quote requests and match leads are stored for the admin desk.
+
+Assign ids and refresh the scrubbed copy after an import:
+
+```bash
+npm run scrub:public
+```
+
+`vercel-build` runs that command. Copy photos that are still stored as remote URLs into Vercel Blob (requires `BLOB_READ_WRITE_TOKEN`):
+
+```bash
+npm run images:to-blob
+```
+
+`npm run backfill:images -- --write` copies into Blob during the backfill when that token is set. The crawl does the same for newly imported photos.
 
 Demo seller accounts remain so someone can still post a listing. The old fictional sample equipment is no longer seeded.
 
@@ -186,7 +200,7 @@ The homepage tool accepts a PDF, an image, or pasted text. With an API key it ca
 | `CRAWL_MARK_ABSENT` | Set to `1` to let a finished crawl mark missing URLs stale. |
 | `DATABASE_URL` | Postgres connection string (pooled on Neon). |
 | `DATABASE_URL_UNPOOLED` | Optional direct Postgres URL. `vercel-build` uses it for schema push and import. |
-| `BLOB_READ_WRITE_TOKEN` | When set, seller photo and PDF uploads go to Vercel Blob. Omit it locally to use disk. |
+| `BLOB_READ_WRITE_TOKEN` | When set, uploads, image backfill, and `npm run images:to-blob` store photos in Vercel Blob. Omit it locally to use disk. Public pages still proxy every photo through `/api/img/<id>`. |
 | `AUTH_SECRET` | Session cookie secret. |
 
 Match scores live in `src/lib/match/score.ts`. `npm test` checks them against the real snapshot.
@@ -195,7 +209,7 @@ Match scores live in `src/lib/match/score.ts`. `npm test` checks them against th
 
 - Lock the product name in `src/lib/config.ts`
 - Move uploads to object storage (the database is already Postgres)
-- Email the seller when an inquiry arrives
+- Email Trent Van Dyke when a quote request arrives
 - Optional review queue so new listings stay hidden until an admin approves them
 - Implement `PaymentProvider` and `FreightProvider` when those workflows are in scope
 - Seller verification, saved searches, and richer test-report metadata

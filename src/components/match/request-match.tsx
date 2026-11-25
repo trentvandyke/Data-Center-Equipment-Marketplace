@@ -38,7 +38,7 @@ function RequestButton() {
   const { pending } = useFormStatus();
   return (
     <button className="btn btn-copper" disabled={pending}>
-      {pending ? "Sending…" : "Request this"}
+      {pending ? "Sending…" : "Request a quote"}
     </button>
   );
 }

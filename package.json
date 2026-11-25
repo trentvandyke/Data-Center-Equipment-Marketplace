@@ -10,11 +10,13 @@
     "lint": "eslint",
     "setup": "node scripts/setup.mjs",
     "db:seed": "prisma db seed",
-    "db:reset": "prisma db push --force-reset && prisma db seed && tsx scripts/import-inventory.ts data/inventory/recs_2026-11-24.json",
+    "db:reset": "prisma db push --force-reset && prisma db seed && tsx scripts/import-inventory.ts data/inventory/recs_2026-11-24.json && tsx scripts/scrub-public.ts",
     "import:inventory": "tsx scripts/import-inventory.ts",
     "crawl": "tsx scripts/crawl.ts",
-    "test": "tsx --test src/lib/match/score.test.ts src/lib/crawl/robots.test.ts src/lib/images/extract.test.ts",
+    "test": "tsx --test src/lib/match/score.test.ts src/lib/crawl/robots.test.ts src/lib/images/extract.test.ts src/lib/public-surface.test.tsx",
     "backfill:images": "tsx scripts/backfill-images.ts",
+    "scrub:public": "tsx scripts/scrub-public.ts",
+    "images:to-blob": "tsx scripts/images-to-blob.ts",
     "vercel-build": "node scripts/vercel-build.mjs"
   },
   "prisma": {

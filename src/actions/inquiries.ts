@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
+import { site } from "@/lib/config";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/session";
 import type { ActionState } from "@/lib/types";
@@ -13,7 +14,7 @@ const inquirySchema = z.object({
   email: z.string().trim().email("Enter a valid email.").max(120),
   company: z.string().trim().max(120).optional(),
   phone: z.string().trim().max(40).optional(),
-  message: z.string().trim().min(10, "Add a few sentences so the seller can respond.").max(4000),
+  message: z.string().trim().min(10, "Add a few sentences so we can respond.").max(4000),
 });
 
 function blank(value: FormDataEntryValue | null) {
@@ -49,7 +50,7 @@ export async function sendInquiry(_prev: ActionState, formData: FormData): Promi
 
   const listing = await prisma.listing.findUnique({
     where: { id: parsed.data.listingId },
-    include: { seller: { select: { company: true, name: true } } },
+    select: { id: true, status: true },
   });
   if (!listing || listing.status !== "ACTIVE") {
     return { error: "This listing is not accepting inquiries." };
@@ -70,17 +71,14 @@ export async function sendInquiry(_prev: ActionState, formData: FormData): Promi
       phone: parsed.data.phone ?? null,
       message: parsed.data.message,
       quantityRequested,
-      kind: formData.get("kind") === "SOURCE" ? "SOURCE" : "LISTING",
+      kind: "LISTING",
     },
   });
 
+  revalidatePath("/admin");
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/inquiries");
-  const seller = listing.seller?.company || listing.seller?.name;
-  if (formData.get("kind") === "SOURCE") {
-    return { success: `Request sent to ${listing.externalSeller ? `the desk for ${listing.externalSeller}` : "the Relayboard desk"}.` };
-  }
-  return { success: `Inquiry sent. ${seller ?? "The seller"} can read it in their seller dashboard.` };
+  return { success: `Quote request sent to ${site.ownerName}.` };
 }
 
 export async function markInquiryRead(formData: FormData) {
@@ -91,7 +89,7 @@ export async function markInquiryRead(formData: FormData) {
     include: { listing: { select: { sellerId: true } } },
   });
   if (!inquiry) return;
-  if (inquiry.listing.sellerId !== user.id && user.role !== "ADMIN") return;
+  if (user.role !== "ADMIN") return;
   if (!inquiry.readAt) {
     await prisma.inquiry.update({ where: { id }, data: { readAt: new Date() } });
   }

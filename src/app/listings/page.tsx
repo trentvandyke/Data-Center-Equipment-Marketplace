@@ -32,11 +32,14 @@ async function Results({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const filters = parseSearchParams(await searchParams);
-  const [{ listings, total, pageCount }, manufacturers] = await Promise.all([
-    searchListings(filters),
-    manufacturerChoices(),
-  ]);
+  const requested = parseSearchParams(await searchParams);
+  const manufacturers = await manufacturerChoices();
+  const filters = {
+    ...requested,
+    manufacturer:
+      requested.manufacturer && manufacturers.includes(requested.manufacturer) ? requested.manufacturer : undefined,
+  };
+  const { listings, total, pageCount } = await searchListings(filters);
   const values = toValues(filters);
   const start = total === 0 ? 0 : (filters.page - 1) * PAGE_SIZE + 1;
   const end = Math.min(total, filters.page * PAGE_SIZE);

@@ -23,7 +23,7 @@ export function ListingImage({
     return <CategoryArt category={category} rating={rating} voltage={voltage} />;
   }
   return (
-    // Remote dealer photos are hotlinked. A blocked response falls back to the category drawing.
+    // Photos are served from our own route. A missing file falls back to the category drawing.
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={src}

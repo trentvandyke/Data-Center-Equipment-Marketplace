@@ -20,6 +20,7 @@ const contentTypeFor: Record<string, string> = {
   jpg: "image/jpeg",
   png: "image/png",
   webp: "image/webp",
+  gif: "image/gif",
   pdf: "application/pdf",
 };
 
@@ -97,6 +98,36 @@ export const MAX_PHOTOS = 8;
 export const MAX_PHOTO_BYTES = 4 * 1024 * 1024;
 export const MAX_DOCUMENTS = 4;
 export const MAX_DOCUMENT_BYTES = 8 * 1024 * 1024;
+
+function extensionFromImage(bytes: Buffer, contentType: string) {
+  if (contentType.includes("png") || (bytes[0] === 0x89 && bytes[1] === 0x50)) return "png";
+  if (contentType.includes("webp") || bytes.subarray(0, 4).toString("ascii") === "RIFF") return "webp";
+  if (contentType.includes("gif")) return "gif";
+  return "jpg";
+}
+
+/**
+ * Copy a remote photo into our storage when BLOB_READ_WRITE_TOKEN is set.
+ * The returned URL is ours. Callers that run without the token keep the remote
+ * URL in the database; public pages still request it through /api/img/:id.
+ */
+export async function copyRemoteImage(remoteUrl: string): Promise<{ url: string; copied: boolean }> {
+  if (!remoteUrl.startsWith("http")) return { url: remoteUrl, copied: false };
+  if (remoteUrl.includes(".blob.vercel-storage.com")) return { url: remoteUrl, copied: false };
+  if (!process.env.BLOB_READ_WRITE_TOKEN) return { url: remoteUrl, copied: false };
+  const response = await fetch(remoteUrl, {
+    redirect: "follow",
+    signal: AbortSignal.timeout(20000),
+    headers: { "User-Agent": "Relayboard image mirror", Accept: "image/*" },
+  });
+  if (!response.ok) throw new Error(`image download failed (${response.status})`);
+  const contentType = response.headers.get("content-type")?.split(";")[0]?.trim().toLowerCase() ?? "";
+  if (contentType && !contentType.startsWith("image/")) throw new Error("image download was not an image");
+  const bytes = Buffer.from(await response.arrayBuffer());
+  if (bytes.length < 32 || bytes.length > 12 * 1024 * 1024) throw new Error("image download was an unexpected size");
+  const saved = await storage.save("photos", bytes, extensionFromImage(bytes, contentType));
+  return { url: saved.url, copied: true };
+}
 
 export function isUploadedFile(value: FormDataEntryValue): value is File {
   return typeof File !== "undefined" && value instanceof File && value.size > 0;

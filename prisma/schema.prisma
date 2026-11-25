@@ -32,6 +32,11 @@ model Listing {
   origin           String            @default("POSTED")
   title            String
   slug             String            @unique
+  /// Buyer-facing copy. Raw title, description, seller, and source URL stay internal.
+  publicCode       String?           @unique
+  publicTitle      String?
+  publicDescription String?
+  publicLocation   String?
   description      String
   category         String
   /// Original category label from a dealer feed, such as "Pad-mount transformer".
