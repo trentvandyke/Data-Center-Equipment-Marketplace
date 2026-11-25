@@ -1,0 +1,162 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// Marketplace account. Roles: BUYER, SELLER, ADMIN.
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  passwordHash String
+  name         String
+  company      String?
+  phone        String?
+  location     String?
+  role         String     @default("BUYER")
+  suspended    Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  listings     Listing[]
+  inquiries    Inquiry[]
+}
+
+model Listing {
+  id               String            @id @default(cuid())
+  sellerId         String?
+  seller           User?             @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  /// POSTED listings come from a seller account. SOURCED listings are imported from public dealer sites.
+  origin           String            @default("POSTED")
+  title            String
+  slug             String            @unique
+  /// Buyer-facing copy. Raw title, description, seller, and source URL stay internal.
+  publicCode       String?           @unique
+  publicTitle      String?
+  publicDescription String?
+  publicLocation   String?
+  /// Buyer-facing manufacturer. The raw `manufacturer` column stays internal.
+  publicManufacturer String?
+  description      String
+  category         String
+  /// Original category label from a dealer feed, such as "Pad-mount transformer".
+  sourceCategory   String?
+  manufacturer     String
+  condition        String
+  conditionRaw     String?
+  priceCents       Int?
+  priceText        String?
+  quantity         Int               @default(1)
+  location         String
+  voltageClass     String            @default("")
+  voltageText      String?
+  ratingValue      Float?
+  ratingUnit       String?
+  ratingText       String?
+  kw               Float?
+  kva              Float?
+  amps             Float?
+  phase            String?
+  frequencyHz      Int?
+  year             Int?
+  hours            String?
+  model            String?
+  serialNumber     String?
+  leadTime         String
+  status           String            @default("ACTIVE")
+  isSample         Boolean           @default(false)
+  featured         Boolean           @default(false)
+  externalSeller   String?
+  sellerType       String?
+  sourcePlatform   String?
+  sourceUrl        String?           @unique
+  notes            String?
+  firstSeen        DateTime?
+  lastSeen         DateTime?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  photos           ListingPhoto[]
+  documents        ListingDocument[]
+  inquiries        Inquiry[]
+  leadLines        LeadLine[]
+
+  @@index([status, category])
+  @@index([manufacturer])
+  @@index([publicManufacturer])
+  @@index([createdAt])
+  @@index([origin, status])
+  @@index([firstSeen])
+  @@index([sourcePlatform, status])
+}
+
+model ListingPhoto {
+  id        String  @id @default(cuid())
+  listingId String
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  url       String
+  alt       String  @default("")
+  sortOrder Int     @default(0)
+}
+
+model ListingDocument {
+  id        String  @id @default(cuid())
+  listingId String
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  url       String
+  filename  String
+  kind      String  @default("OTHER")
+}
+
+model Inquiry {
+  id                String   @id @default(cuid())
+  listingId         String
+  listing           Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  buyerId           String?
+  buyer             User?    @relation(fields: [buyerId], references: [id], onDelete: SetNull)
+  name              String
+  email             String
+  company           String?
+  phone             String?
+  message           String
+  quantityRequested Int?
+  /// LISTING is a message to the seller. SOURCE is "ask us to source this" for a dealer listing.
+  kind              String   @default("LISTING")
+  createdAt         DateTime @default(now())
+  readAt            DateTime?
+
+  @@index([listingId, createdAt])
+  @@index([kind, createdAt])
+}
+
+/// A buyer's equipment requirement and the listings they asked Relayboard to pursue.
+model Lead {
+  id        String     @id @default(cuid())
+  name      String
+  email     String
+  company   String?
+  phone     String?
+  message   String?
+  createdAt DateTime   @default(now())
+  lines     LeadLine[]
+}
+
+model LeadLine {
+  id        String   @id @default(cuid())
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  label     String
+  listingId String?
+  listing   Listing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  score     Int?
+  reasons   String?
+}
+
+/// Saved bill of equipment so match results can be reopened and turned into a lead.
+model MatchRun {
+  id        String   @id @default(cuid())
+  inputText String?
+  itemsJson String
+  createdAt DateTime @default(now())
+}

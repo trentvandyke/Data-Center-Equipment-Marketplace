@@ -1,0 +1,133 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #121a24;
+  --color-ink-soft: #243140;
+  --color-muted: #5c6b7c;
+  --color-paper: #f3efe7;
+  --color-card: #fffcf8;
+  --color-line: #e3dcd1;
+  --color-copper: #c4622d;
+  --color-copper-dark: #8d3e16;
+  --color-pine: #1d4f46;
+  --color-pine-dark: #143b34;
+  --color-danger: #9f2d2d;
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-newsreader), Georgia, "Times New Roman", serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+
+::selection {
+  background: #f0d2c2;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--color-copper);
+  outline-offset: 2px;
+}
+
+.field {
+  width: 100%;
+  border-radius: 0.55rem;
+  border: 1px solid var(--color-line);
+  background: white;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.9375rem;
+  color: var(--color-ink);
+}
+
+.field:disabled {
+  background: #f6f3ee;
+  color: var(--color-muted);
+}
+
+textarea.field {
+  min-height: 9rem;
+  resize: vertical;
+}
+
+.label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border-radius: 999px;
+  padding: 0.6rem 1.05rem;
+  font-size: 0.875rem;
+  font-weight: 650;
+  line-height: 1.2;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+}
+
+.btn-primary {
+  background: var(--color-pine);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--color-pine-dark);
+}
+
+.btn-copper {
+  background: var(--color-copper);
+  color: white;
+}
+
+.btn-copper:hover {
+  background: var(--color-copper-dark);
+}
+
+.btn-ghost {
+  background: var(--color-card);
+  color: var(--color-ink);
+  border: 1px solid var(--color-line);
+}
+
+.btn-ghost:hover {
+  border-color: var(--color-ink);
+}
+
+.btn-danger {
+  background: transparent;
+  color: var(--color-danger);
+  border: 1px solid color-mix(in srgb, var(--color-danger) 40%, white);
+}
+
+.btn-danger:hover {
+  background: color-mix(in srgb, var(--color-danger) 8%, white);
+}
+
+.panel {
+  border: 1px solid var(--color-line);
+  background: var(--color-card);
+  border-radius: 1rem;
+  box-shadow: 0 1px 0 rgba(18, 26, 36, 0.03);
+}
