@@ -1,10 +1,21 @@
-# Relayboard
+# Grid Asset Exchange
 
-Marketplace MVP for buying and selling new-surplus and used **data center electrical equipment**: switchgear, transformers, UPS systems and batteries, PDUs and RPPs, generators and paralleling gear, ATS/STS, busway, switchboards and panelboards, breakers, and related gear.
+Marketplace for buying and selling new-surplus and used **data center electrical equipment**: switchgear, transformers, UPS systems and batteries, PDUs and RPPs, generators and paralleling gear, ATS/STS, busway, switchboards and panelboards, breakers, and related gear.
 
-**Relayboard** is a working product name. Change it in one place: `name` inside [`src/lib/config.ts`](src/lib/config.ts). The operator is **Axiveris, LLC**, Bend, Oregon.
+**Grid Asset Exchange** (gridassetexchange.com) is a d/b/a of **Axiveris, LLC**, Bend, Oregon. The name, domain, and support address live in [`src/lib/config.ts`](src/lib/config.ts).
 
 Payments and freight are intentionally off. Buyers send an inquiry; commercial terms happen between the parties. The seams for a later checkout or freight quote live in [`src/lib/payments.ts`](src/lib/payments.ts) and [`src/lib/freight.ts`](src/lib/freight.ts). File uploads go through [`src/lib/storage.ts`](src/lib/storage.ts).
+
+## Brand
+
+Logo files live in `public/brand/`:
+
+- `gax-logo-horizontal.svg` and `gax-logo-horizontal-white.svg`
+- `gax-icon.svg` and `gax-icon-white.svg`
+- `gax-wordmark.svg`
+- `gax-logo-horizontal@2x.png`, `gax-logo-horizontal@4x.png`, `gax-icon@2x.png`, `gax-icon@4x.png`
+
+App icons: `src/app/icon.png` (512), `src/app/apple-icon.png` (180), `src/app/favicon.ico`, and `src/app/opengraph-image.png` (1200×630).
 
 ## Stack
 
@@ -24,7 +35,7 @@ Payments and freight are intentionally off. Buyers send an inquiry; commercial t
 - Mark a listing sold or available again
 - Seller dashboard for listings the account posted. Quote requests are not delivered to seller accounts
 - Admin view to hide or feature listings and to suspend users
-- A resale catalog of 2,388 listings from the 2026-11-24 snapshot. Buyers see a neutral id (`RB-000123`) and scrubbed title. Source names, source URLs, and stock numbers stay on the admin desk
+- A resale catalog of 2,388 listings from the 2026-11-24 snapshot. Buyers see a neutral id (`GAX-000123`) and scrubbed title. Source names, source URLs, and stock numbers stay on the admin desk
 - Idempotent JSON/Excel import (CLI and admin upload) keyed on the source URL, with first seen / last seen dates and stale marking
 - Daily crawl of the public dealer sites that allow it, plus a manual file drop for the rest
 - Homepage one-line matcher: upload a diagram or paste a requirement, edit the extracted lines, and rank inventory. Requests land in the admin desk
@@ -143,9 +154,9 @@ npm run backfill:images -- --write
 
 `--write` updates the database in `DATABASE_URL` (use the Neon direct URL for a large run). Results are cached under `.cache/image-backfill`, the crawl waits between requests, and it skips paths disallowed by `robots.txt`. A full pass is a one-off command, not part of every Vercel build, because fetching every listing page does not fit a short deploy. Set `BACKFILL_IMAGES=1` only if you add that command to your own deploy hook. Seller photo uploads use local `public/uploads` in development and Vercel Blob when `BLOB_READ_WRITE_TOKEN` is set.
 
-Buyers never see who originally listed a unit. Public pages, search, match results, page metadata, and the quote form use the scrubbed title, description, and location, plus a listing id such as `RB-000123`. Photos are requested as `/api/img/<id>`, so a source domain is not in the page. Quote requests and match leads are stored for the admin desk.
+Buyers never see who originally listed a unit. Public pages, search, match results, page metadata, and the quote form use the scrubbed title, description, and location, plus a listing id such as `GAX-000123`. Photos are requested as `/api/img/<id>`, so a source domain is not in the page. Quote requests and match leads are stored for the admin desk.
 
-Assign ids and refresh the scrubbed copy after an import:
+Assign ids and refresh the scrubbed copy after an import. `npm run scrub:public` also rewrites an existing `RB-000123` to `GAX-000123` without changing the number:
 
 ```bash
 npm run scrub:public

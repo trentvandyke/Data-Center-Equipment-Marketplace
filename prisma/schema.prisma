@@ -37,6 +37,8 @@ model Listing {
   publicTitle      String?
   publicDescription String?
   publicLocation   String?
+  /// Buyer-facing manufacturer. The raw `manufacturer` column stays internal.
+  publicManufacturer String?
   description      String
   category         String
   /// Original category label from a dealer feed, such as "Pad-mount transformer".
@@ -82,6 +84,7 @@ model Listing {
 
   @@index([status, category])
   @@index([manufacturer])
+  @@index([publicManufacturer])
   @@index([createdAt])
   @@index([origin, status])
   @@index([firstSeen])

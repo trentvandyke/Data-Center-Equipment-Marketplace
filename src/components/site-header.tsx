@@ -12,12 +12,17 @@ export function SiteHeader() {
       </a>
       <div className="mx-auto max-w-6xl px-4 py-3">
         <div className="flex items-center gap-4">
-          <Link href="/" className="flex items-center gap-3">
-            <span className="grid h-9 w-9 place-items-center rounded-md bg-pine font-serif text-lg text-white">R</span>
-            <span>
-              <span className="block font-serif text-xl leading-none">{site.name}</span>
-              <span className="mt-1 block text-[10px] uppercase tracking-[0.16em] text-paper/60">Electrical equipment</span>
-            </span>
+          <Link href="/" aria-label={site.name} className="shrink-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/brand/gax-logo-horizontal-white.svg"
+              alt=""
+              width={968}
+              height={256}
+              className="hidden h-12 w-auto md:block"
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/gax-icon-white.svg" alt="" width={64} height={64} className="h-9 w-9 md:hidden" />
           </Link>
           <form action="/listings" className="hidden min-w-0 flex-1 md:block">
             <label className="sr-only" htmlFor="header-search">

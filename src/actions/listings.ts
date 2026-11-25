@@ -110,6 +110,7 @@ export async function saveListing(listingId: string, _prev: ActionState, formDat
     title: input.title,
     description: input.description,
     location: input.location,
+    manufacturer: input.manufacturer,
   });
 
   try {

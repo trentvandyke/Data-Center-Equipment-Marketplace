@@ -5,6 +5,7 @@ import test from "node:test";
 import { BuyerListing } from "@/components/buyer-listing";
 import { ListingCardFace } from "@/components/listing-card";
 import { dealerDomains, dealerNames } from "@/lib/dealer-identities";
+import { canonicalPublicCode } from "@/lib/public-copy";
 
 const poison = [
   ...dealerNames,
@@ -19,7 +20,7 @@ const poison = [
 ].join(" ");
 
 const listing = {
-  publicCode: "RB-000123",
+  publicCode: "GAX-000123",
   title: `Eaton 2500 kVA transformer ${poison}`,
   description: `Pad-mount transformer in Dallas. ${poison}`,
   location: `Dallas, TX ${poison}`,
@@ -74,8 +75,16 @@ test("rendered buyer surfaces omit every source name and domain", () => {
   assert.equal(folded.includes("resa power"), false);
   assert.equal(folded.includes("view original"), false);
   assert.match(html, /\/api\/img\/photo-1/);
-  assert.match(html, /RB-000123/);
+  assert.match(html, /GAX-000123/);
   assert.match(html, /Eaton/);
   assert.match(html, /Request a quote/);
+  assert.match(html, /Quotes, payment, and logistics are handled by Grid Asset Exchange/);
+  assert.equal(html.includes("with the seller"), false);
   assert.match(html, /Trent Van Dyke/);
+});
+
+test("legacy RB- listing ids keep the same number as GAX-", () => {
+  assert.equal(canonicalPublicCode("RB-000123"), "GAX-000123");
+  assert.equal(canonicalPublicCode("RB-7"), "GAX-000007");
+  assert.equal(canonicalPublicCode("GAX-000123"), "GAX-000123");
 });

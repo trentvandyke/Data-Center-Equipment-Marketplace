@@ -1,4 +1,4 @@
-const USER_AGENT = "RelayboardBot/0.1 (+https://relayboard.example/bot; Axiveris LLC public inventory refresh)";
+const USER_AGENT = "GridAssetExchange/0.1 (+https://gridassetexchange.com/bot; Axiveris LLC public inventory refresh)";
 
 export function crawlDelayMs() {
   const configured = Number(process.env.CRAWL_MIN_DELAY_MS ?? 1000);

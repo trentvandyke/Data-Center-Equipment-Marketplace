@@ -4,14 +4,12 @@ import {
   conditions,
   hasId,
   leadTimes,
-  manufacturers,
   ratingUnits,
   voltageClasses,
 } from "@/lib/catalog";
-import { dealerNames } from "@/lib/dealer-identities";
 import { prisma } from "@/lib/db";
 import { daysAgo } from "@/lib/format";
-import { sanitizePublicText, sellerAliases } from "@/lib/public-copy";
+import { publicManufacturerName, sanitizePublicText } from "@/lib/public-copy";
 
 export const PAGE_SIZE = 12;
 
@@ -60,7 +58,7 @@ export function parseSearchParams(raw: RawParams): SearchFilters {
   return {
     q: one(raw, "q")?.slice(0, 120),
     category: category && hasId(categories, category) ? category : undefined,
-    manufacturer: publicManufacturer(manufacturer),
+    manufacturer: allowedManufacturer(manufacturer),
     fresh: one(raw, "fresh") === "week" ? "week" : undefined,
     condition: condition && hasId(conditions, condition) ? condition : undefined,
     voltageClass: voltage && hasId(voltageClasses, voltage) ? voltage : undefined,
@@ -88,7 +86,7 @@ export function listingWhere(filters: SearchFilters): Prisma.ListingWhereInput {
         { publicDescription: { contains: q, mode: "insensitive" } },
         { publicLocation: { contains: q, mode: "insensitive" } },
         { publicCode: { contains: q, mode: "insensitive" } },
-        { manufacturer: { contains: q, mode: "insensitive" } },
+        { publicManufacturer: { contains: q, mode: "insensitive" } },
         { model: { contains: q, mode: "insensitive" } },
         { sourceCategory: { contains: q, mode: "insensitive" } },
         { voltageText: { contains: q, mode: "insensitive" } },
@@ -100,7 +98,7 @@ export function listingWhere(filters: SearchFilters): Prisma.ListingWhereInput {
     where.firstSeen = { gte: daysAgo(7) };
   }
   if (filters.category) where.category = filters.category;
-  if (filters.manufacturer) where.manufacturer = filters.manufacturer;
+  if (filters.manufacturer) where.publicManufacturer = filters.manufacturer;
   if (filters.condition) where.condition = filters.condition;
   if (filters.voltageClass) where.voltageClass = filters.voltageClass;
   if (filters.leadTime) where.leadTime = filters.leadTime;
@@ -208,32 +206,20 @@ export function filtersAreActive(filters: SearchFilters) {
 }
 
 export async function manufacturerChoices() {
-  const [rows, sellers] = await Promise.all([
-    prisma.listing.findMany({
-      where: { status: "ACTIVE" },
-      distinct: ["manufacturer"],
-      select: { manufacturer: true },
-    }),
-    prisma.listing.findMany({
-      where: { status: "ACTIVE", externalSeller: { not: null } },
-      distinct: ["externalSeller"],
-      select: { externalSeller: true },
-    }),
-  ]);
-  const sellerNames = new Set(
-    sellers.flatMap((row) => sellerAliases(row.externalSeller).map((name) => name.toLowerCase())),
-  );
-  const known = new Set<string>(manufacturers);
-  const extras = rows
-    .map((row) => row.manufacturer)
-    .filter((name) => name && !known.has(name) && publicManufacturer(name) === name && !sellerNames.has(name.toLowerCase()))
-    .sort((a, b) => a.localeCompare(b));
-  return [...manufacturers.filter((name) => !sellerNames.has(name.toLowerCase())), ...extras];
+  const rows = await prisma.listing.findMany({
+    where: { status: "ACTIVE" },
+    select: { manufacturer: true, publicManufacturer: true },
+  });
+  const names = new Set<string>();
+  for (const row of rows) {
+    const name = (row.publicManufacturer || publicManufacturerName(row.manufacturer)).trim();
+    if (name) names.add(name);
+  }
+  return [...names].sort((a, b) => a.localeCompare(b));
 }
 
-function publicManufacturer(value: string | undefined) {
+function allowedManufacturer(value: string | undefined) {
   if (!value || value.length > 160) return undefined;
-  if (dealerNames.some((name) => name.toLowerCase() === value.toLowerCase())) return undefined;
-  if (sanitizePublicText(value) !== value) return undefined;
+  if (value !== publicManufacturerName(value)) return undefined;
   return value;
 }

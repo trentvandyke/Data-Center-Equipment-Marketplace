@@ -1,3 +1,5 @@
+import { site } from "@/lib/config";
+
 /**
  * Payment seam. Checkout is intentionally off in this version.
  * A later provider (for example Stripe Checkout) should implement
@@ -23,7 +25,7 @@ export type PaymentProvider = {
 export const payments: PaymentProvider = {
   id: "off_platform",
   enabled: false,
-  buyerMessage: "Payment is arranged directly with the seller. Online checkout is not enabled yet.",
+  buyerMessage: `Quotes, payment, and logistics are handled by ${site.name}.`,
   async createCheckout() {
     throw new Error("Online payment is not enabled.");
   },

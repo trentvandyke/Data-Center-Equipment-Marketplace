@@ -17,11 +17,19 @@ const serif = Newsreader({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(site.url),
   title: {
     default: `${site.name} — data center electrical equipment`,
     template: `%s · ${site.name}`,
   },
   description: site.description,
+  openGraph: {
+    title: site.name,
+    description: site.description,
+    siteName: site.name,
+    url: site.url,
+    type: "website",
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

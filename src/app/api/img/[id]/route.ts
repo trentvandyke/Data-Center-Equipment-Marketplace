@@ -49,7 +49,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
     const upstream = await fetch(photo.url, {
       redirect: "follow",
       signal: AbortSignal.timeout(15000),
-      headers: { "User-Agent": "Relayboard image proxy", Accept: "image/*" },
+      headers: { "User-Agent": "GridAssetExchange image proxy", Accept: "image/*" },
     });
     if (!upstream.ok || !upstream.body) return new Response("Not found", { status: 404 });
     const headerType = upstream.headers.get("content-type")?.split(";")[0]?.trim().toLowerCase() ?? "";

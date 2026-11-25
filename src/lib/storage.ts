@@ -118,7 +118,7 @@ export async function copyRemoteImage(remoteUrl: string): Promise<{ url: string;
   const response = await fetch(remoteUrl, {
     redirect: "follow",
     signal: AbortSignal.timeout(20000),
-    headers: { "User-Agent": "Relayboard image mirror", Accept: "image/*" },
+    headers: { "User-Agent": "GridAssetExchange image mirror", Accept: "image/*" },
   });
   if (!response.ok) throw new Error(`image download failed (${response.status})`);
   const contentType = response.headers.get("content-type")?.split(";")[0]?.trim().toLowerCase() ?? "";

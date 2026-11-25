@@ -20,7 +20,7 @@ export type FreightProvider = {
 export const freight: FreightProvider = {
   id: "off_platform",
   enabled: false,
-  buyerMessage: "Freight, rigging, and crane service are arranged off platform.",
+  buyerMessage: "",
   async quoteShipment() {
     throw new Error("Freight quoting is not enabled.");
   },

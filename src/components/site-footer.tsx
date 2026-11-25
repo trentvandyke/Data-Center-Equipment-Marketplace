@@ -6,8 +6,9 @@ export function SiteFooter() {
     <footer className="mt-16 bg-ink text-paper">
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-3">
         <div>
-          <p className="font-serif text-2xl">{site.name}</p>
-          <p className="mt-2 max-w-xs text-sm leading-6 text-paper/70">{site.tagline}</p>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/gax-logo-horizontal-white.svg" alt={site.name} width={968} height={256} className="h-14 w-auto" />
+          <p className="mt-3 max-w-xs text-sm leading-6 text-paper/70">{site.tagline}</p>
         </div>
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-paper/45">Operator</p>
@@ -30,7 +31,7 @@ export function SiteFooter() {
         </div>
       </div>
       <p className="border-t border-white/10 px-4 py-4 text-center text-xs text-paper/50">
-        © 2026 {site.legalName}. {site.name} is a working product name.
+        {site.name} is a d/b/a of {site.legalName}
       </p>
     </footer>
   );

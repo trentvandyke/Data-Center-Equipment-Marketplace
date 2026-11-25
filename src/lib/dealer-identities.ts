@@ -31,7 +31,33 @@ export const dealerIdentities = [
   { name: "Bid on Equipment", domains: ["bid-on-equipment.com"] },
   { name: "Power Generation Enterprises", domains: ["powergenenterprises.com"] },
   { name: "T&R Electric", domains: ["t-r.com"] },
+  { name: "eBay", domains: ["ebay.com"] },
+  { name: "Veracity Asset Services", domains: ["veracityam.com"] },
+  { name: "Veracity Connect", domains: ["veracityam.com"] },
+  { name: "Veracity", domains: ["veracityam.com"] },
+  { name: "DMK Net Enterprises", domains: [] },
+  { name: "EnergyEquipment.com", domains: ["energyequipment.com"] },
+  { name: "Electrical Trader", domains: [] },
+  { name: "Live Auction World", domains: [] },
+  { name: "Equipment Recovery Corp", domains: [] },
+  { name: "Maddox Industrial Transformer", domains: ["maddoxtransformer.com"] },
+  { name: "Maddox", domains: ["maddoxtransformer.com"] },
+  { name: "Sunbelt Solomon Services", domains: ["sunbeltusa.com"] },
+  { name: "Sunbelt Solomon", domains: ["sunbeltusa.com"] },
+  { name: "Sunbelt-Solomon Solutions", domains: ["sunbeltusa.com"] },
+  { name: "Sunbelt-Solomon", domains: ["sunbeltusa.com"] },
+  { name: "Sunbelt Transformer", domains: ["sunbeltusa.com"] },
+  { name: "Sunbelt", domains: ["sunbeltusa.com"] },
+  { name: "Surplec HV", domains: ["surplec.com"] },
+  { name: "Surplec", domains: ["surplec.com"] },
+  { name: "High to Low Voltage", domains: [] },
+  { name: "American Electric Components", domains: [] },
+  { name: "American Electric", domains: [] },
+  { name: "Solomon", domains: [] },
 ] as const;
+
+/** Short tokens that are unsafe to search for as raw substrings (they occur inside ordinary words). */
+export const shortDealerTokens = ["ERC", "LTL", "T&R", "WPP"] as const;
 
 export const dealerNames = [...new Set(dealerIdentities.map((item) => item.name))].sort((a, b) => b.length - a.length);
 

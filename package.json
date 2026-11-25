@@ -1,5 +1,5 @@
 {
-  "name": "relayboard",
+  "name": "grid-asset-exchange",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -13,7 +13,7 @@
     "db:reset": "prisma db push --force-reset && prisma db seed && tsx scripts/import-inventory.ts data/inventory/recs_2026-11-24.json && tsx scripts/scrub-public.ts",
     "import:inventory": "tsx scripts/import-inventory.ts",
     "crawl": "tsx scripts/crawl.ts",
-    "test": "tsx --test src/lib/match/score.test.ts src/lib/crawl/robots.test.ts src/lib/images/extract.test.ts src/lib/public-surface.test.tsx",
+    "test": "tsx --test src/lib/match/score.test.ts src/lib/crawl/robots.test.ts src/lib/images/extract.test.ts src/lib/public-surface.test.tsx src/lib/public-copy.test.ts",
     "backfill:images": "tsx scripts/backfill-images.ts",
     "scrub:public": "tsx scripts/scrub-public.ts",
     "images:to-blob": "tsx scripts/images-to-blob.ts",
