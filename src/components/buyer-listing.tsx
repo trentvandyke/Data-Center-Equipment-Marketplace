@@ -16,6 +16,7 @@ import { freight } from "@/lib/freight";
 import { formatDate, formatOffer, formatRating } from "@/lib/format";
 import { payments } from "@/lib/payments";
 import { buyerPhotoSrc, isHostedFile, sanitizePublicText, toPublicListing, type PublicListingSource } from "@/lib/public-copy";
+import { hidesPublicPhotos } from "@/lib/sources";
 
 export type BuyerListingRecord = PublicListingSource & {
   category: string;
@@ -33,6 +34,8 @@ export type BuyerListingRecord = PublicListingSource & {
   status: string;
   updatedAt: Date;
   createdAt: Date;
+  sourcePlatform?: string | null;
+  sourceUrl?: string | null;
   photos: { id: string }[];
   documents: { id: string; url: string; filename: string; kind: string }[];
 };
@@ -64,6 +67,7 @@ export function BuyerListing({
     ["Location", view.location],
   ].filter((row): row is [string, string] => row[1].length > 0 && row[1] !== "—");
   const documents = listing.documents.filter((doc) => isHostedFile(doc.url));
+  const photos = hidesPublicPhotos(listing) ? [] : listing.photos;
 
   return (
     <article className="mx-auto max-w-6xl px-4 py-8">
@@ -92,7 +96,7 @@ export function BuyerListing({
           <PhotoGallery
             title={view.title}
             category={listing.category}
-            photos={listing.photos.map((photo) => ({ src: buyerPhotoSrc(photo.id), alt: view.title }))}
+            photos={photos.map((photo) => ({ src: buyerPhotoSrc(photo.id), alt: view.title }))}
           />
           <header className="mt-6">
             <div className="flex flex-wrap items-center gap-2">

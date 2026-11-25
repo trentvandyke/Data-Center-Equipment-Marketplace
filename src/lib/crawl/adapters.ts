@@ -2,6 +2,7 @@ import { recordFromProduct } from "@/lib/crawl/classify";
 import { collectImageUrls } from "@/lib/images/extract";
 import { allowed, crawlPageLimit, fetchText } from "@/lib/crawl/http";
 import type { InventoryRecord } from "@/lib/inventory/types";
+import { sourceById } from "@/lib/sources";
 
 export type AdapterResult = {
   id: string;
@@ -14,6 +15,8 @@ export type AdapterResult = {
 export type SourceAdapter = {
   id: string;
   label: string;
+  /** When set, buyer pages show the category drawing instead of this source's photos. */
+  hidePhotosPublic?: boolean;
   run: () => Promise<AdapterResult>;
 };
 
@@ -174,6 +177,7 @@ export const adapters: SourceAdapter[] = [
   {
     id: "cigroup",
     label: "CI Group",
+    hidePhotosPublic: sourceById("cigroup").hidePhotosPublic,
     run: () =>
       crawlWoo({
         id: "cigroup",

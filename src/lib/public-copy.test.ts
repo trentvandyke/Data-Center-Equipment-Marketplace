@@ -5,6 +5,8 @@ import { dealerDomains, dealerNames } from "@/lib/dealer-identities";
 import { fromSnapshotJson } from "@/lib/inventory/parse";
 import { toStoredListing } from "@/lib/inventory/normalize";
 import { publicCopy, publicManufacturerName } from "@/lib/public-copy";
+import { adapters } from "@/lib/crawl/adapters";
+import { hidesPublicPhotos, sourceCatalog } from "@/lib/sources";
 
 const extraNames = [
   "eBay",
@@ -22,6 +24,7 @@ const extraNames = [
   "T&R",
   "American Electric Components",
   "Original listing on",
+  "Transformer Network",
 ];
 
 function escapeRegExp(value: string) {
@@ -69,7 +72,22 @@ test("public copy drops provenance and dealer manufacturers across the snapshot"
   assert.equal(publicManufacturerName("Surplec HV"), "Unbranded/Other");
   assert.equal(publicManufacturerName("High to Low Voltage"), "Unbranded/Other");
   assert.equal(publicManufacturerName("T&R"), "Unbranded/Other");
+  assert.equal(publicManufacturerName("Transformer Network"), "Unbranded/Other");
   assert.equal(publicManufacturerName("Eaton"), "Eaton");
   assert.equal(facets.has("Maddox Industrial Transformer"), false);
+  assert.equal(facets.has("Transformer Network"), false);
   assert.equal(facets.has("GE (remanufactured)"), true);
+  for (const source of sourceCatalog) {
+    assert.equal(publicManufacturerName(source.label), "Unbranded/Other", source.label);
+    for (const name of source.names) {
+      assert.equal(publicManufacturerName(name), "Unbranded/Other", name);
+    }
+  }
+  assert.equal(hidesPublicPhotos({ sourcePlatform: "cigroup-us.com" }), true);
+  assert.equal(hidesPublicPhotos({ sourceUrl: "https://www.cigroup-us.com/product/example" }), true);
+  assert.equal(hidesPublicPhotos({ sourcePlatform: "arcbarn.com" }), false);
+  for (const adapter of adapters) {
+    const source = sourceCatalog.find((item) => item.id === adapter.id);
+    assert.equal(Boolean(adapter.hidePhotosPublic), Boolean(source?.hidePhotosPublic), adapter.id);
+  }
 });

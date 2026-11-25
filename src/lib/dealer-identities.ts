@@ -54,6 +54,7 @@ export const dealerIdentities = [
   { name: "American Electric Components", domains: [] },
   { name: "American Electric", domains: [] },
   { name: "Solomon", domains: [] },
+  { name: "Transformer Network", domains: ["transformernetwork.com"] },
 ] as const;
 
 /** Short tokens that are unsafe to search for as raw substrings (they occur inside ordinary words). */

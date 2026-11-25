@@ -1,4 +1,5 @@
 import { dealerDomains, dealerNames, shortDealerTokens } from "@/lib/dealer-identities";
+import { sourceDealerNames } from "@/lib/sources";
 
 function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -22,7 +23,7 @@ export function stripProvenance(input: string) {
 function isNonOem(value: string) {
   const core = value.trim().toLowerCase();
   if (!core) return true;
-  return [...dealerNames, ...shortDealerTokens].some((name) => {
+  return [...dealerNames, ...shortDealerTokens, ...sourceDealerNames()].some((name) => {
     const token = name.toLowerCase();
     return core === token || core.startsWith(`${token} `) || core.startsWith(`${token},`) || core.startsWith(`${token}(`);
   });

@@ -4,6 +4,7 @@ import { ListingImage } from "@/components/listing-image";
 import { labelOf, voltageClasses } from "@/lib/catalog";
 import { formatOffer, formatRating } from "@/lib/format";
 import { buyerPhotoSrc, toPublicListing, type PublicListingSource } from "@/lib/public-copy";
+import { hidesPublicPhotos } from "@/lib/sources";
 
 export type PublicCardListing = PublicListingSource & {
   slug: string;
@@ -14,12 +15,14 @@ export type PublicCardListing = PublicListingSource & {
   ratingUnit: string | null;
   priceCents: number | null;
   isSample: boolean;
+  sourcePlatform?: string | null;
+  sourceUrl?: string | null;
   photos: { id: string }[];
 };
 
 export function ListingCardFace({ listing }: { listing: PublicCardListing }) {
   const view = toPublicListing(listing);
-  const photo = listing.photos[0];
+  const photo = hidesPublicPhotos(listing) ? undefined : listing.photos[0];
   const voltage = view.voltageText || labelOf(voltageClasses, listing.voltageClass);
   const rating = view.ratingText || formatRating(listing.ratingValue, listing.ratingUnit);
   return (

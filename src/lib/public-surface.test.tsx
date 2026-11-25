@@ -83,6 +83,21 @@ test("rendered buyer surfaces omit every source name and domain", () => {
   assert.match(html, /Trent Van Dyke/);
 });
 
+test("CI Group photos stay off public listing pages", () => {
+  const watermarked = {
+    ...listing,
+    sourcePlatform: "cigroup-us.com",
+    sourceUrl: "https://cigroup-us.com/product/switchgear",
+    photos: [{ id: "ci-photo", url: "https://cigroup-us.com/watermark.jpg", alt: "CI GROUP" }],
+  };
+  const html = renderToStaticMarkup(
+    createElement("div", null, createElement(ListingCardFace, { listing: watermarked }), createElement(BuyerListing, { listing: watermarked })),
+  );
+  assert.equal(html.includes("/api/img/"), false);
+  assert.equal(html.toLowerCase().includes("cigroup"), false);
+  assert.equal(html.toLowerCase().includes("ci group"), false);
+});
+
 test("legacy RB- listing ids keep the same number as GAX-", () => {
   assert.equal(canonicalPublicCode("RB-000123"), "GAX-000123");
   assert.equal(canonicalPublicCode("RB-7"), "GAX-000007");

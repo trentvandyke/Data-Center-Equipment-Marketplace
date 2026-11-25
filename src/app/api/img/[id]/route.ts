@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { prisma } from "@/lib/db";
+import { hidesPublicPhotos } from "@/lib/sources";
 
 export const instant = false;
 
@@ -28,8 +29,11 @@ function imageResponse(body: Buffer | ReadableStream<Uint8Array>, contentType: s
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
   if (!id || id.length > 80) return new Response("Not found", { status: 404 });
-  const photo = await prisma.listingPhoto.findUnique({ where: { id }, select: { url: true } });
-  if (!photo?.url) return new Response("Not found", { status: 404 });
+  const photo = await prisma.listingPhoto.findUnique({
+    where: { id },
+    select: { url: true, listing: { select: { sourcePlatform: true, sourceUrl: true } } },
+  });
+  if (!photo?.url || hidesPublicPhotos(photo.listing)) return new Response("Not found", { status: 404 });
 
   if (photo.url.startsWith("/uploads/")) {
     const relative = photo.url.slice("/uploads/".length);
